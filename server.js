@@ -6,7 +6,7 @@ import cors from "cors";
 const app = express();
 app.use(cors());
 
-// Werkende supermarkt-URL's
+// Supermarkt-URL's via AllOrigins proxy
 const SUPERMARKET_URLS = {
   "Albert Heijn": "https://www.voordeelmuis.nl/aanbiedingen/ah",
   "Jumbo": "https://www.voordeelmuis.nl/aanbiedingen/jumbo",
@@ -20,7 +20,10 @@ const SUPERMARKET_URLS = {
 
 async function scrapeSupermarket(store, url) {
   try {
-    const { data } = await axios.get(url, {
+    // Gebruik gratis proxy
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+
+    const { data } = await axios.get(proxyUrl, {
       headers: { "User-Agent": "Mozilla/5.0" }
     });
 
