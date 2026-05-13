@@ -6,22 +6,20 @@ import cors from "cors";
 const app = express();
 app.use(cors());
 
-// Supermarkten + filtercodes
-const SUPERMARKETS = {
-  "Albert Heijn": "ah",
-  "Jumbo": "jumbo",
-  "Lidl": "lidl",
-  "Aldi": "aldi",
-  "Dirk": "dirk",
-  "Plus": "plus",
-  "Hoogvliet": "hoogvliet",
-  "Vomar": "vomar"
+// Werkende Voordeelmuis supermarkt-URL's
+const SUPERMARKET_URLS = {
+  "Albert Heijn": "https://www.voordeelmuis.nl/aanbiedingen/ah",
+  "Jumbo": "https://www.voordeelmuis.nl/aanbiedingen/jumbo",
+  "Lidl": "https://www.voordeelmuis.nl/aanbiedingen/lidl",
+  "Aldi": "https://www.voordeelmuis.nl/aanbiedingen/aldi",
+  "Dirk": "https://www.voordeelmuis.nl/aanbiedingen/dirk",
+  "Plus": "https://www.voordeelmuis.nl/aanbiedingen/plus",
+  "Hoogvliet": "https://www.voordeelmuis.nl/aanbiedingen/hoogvliet",
+  "Vomar": "https://www.voordeelmuis.nl/aanbiedingen/vomar"
 };
 
-// Scraper per supermarkt
-async function scrapeSupermarket(name, code) {
-  const url = `https://www.voordeelmuis.nl/cgi-bin/v.cgi?a=ss&d=1&f=${code}`;
-
+// Scraper voor 1 supermarkt
+async function scrapeSupermarket(store, url) {
   try {
     const { data } = await axios.get(url, {
       headers: { "User-Agent": "Mozilla/5.0" }
@@ -30,13 +28,13 @@ async function scrapeSupermarket(name, code) {
     const $ = cheerio.load(data);
     const deals = [];
 
-    $("table tr").each((i, el) => {
-      const item = $(el).find("td:nth-child(2)").text().trim();
-      const price = $(el).find("td:nth-child(3)").text().trim();
+    $(".product-list-item").each((i, el) => {
+      const item = $(el).find(".product-title").text().trim();
+      const price = $(el).find(".price").text().trim();
 
       if (item) {
         deals.push({
-          store: name,
+          store,
           item,
           price
         });
@@ -45,7 +43,7 @@ async function scrapeSupermarket(name, code) {
 
     return deals;
   } catch (err) {
-    console.error(`Error scraping ${name}:`, err.message);
+    console.error(`Error scraping ${store}:`, err.message);
     return [];
   }
 }
@@ -53,8 +51,8 @@ async function scrapeSupermarket(name, code) {
 app.get("/api/deals", async (req, res) => {
   let allDeals = [];
 
-  for (const [name, code] of Object.entries(SUPERMARKETS)) {
-    const results = await scrapeSupermarket(name, code);
+  for (const [store, url] of Object.entries(SUPERMARKET_URLS)) {
+    const results = await scrapeSupermarket(store, url);
     allDeals = allDeals.concat(results);
   }
 
@@ -74,6 +72,5 @@ app.get("/api/deals", async (req, res) => {
 });
 
 app.listen(3000, () => {
-  console.log("Voordeelmuis supermarkt scraper draait op http://localhost:3000");
+  console.log("Supermarkt scraper draait op http://localhost:3000");
 });
-
