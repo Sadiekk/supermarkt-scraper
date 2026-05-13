@@ -6,7 +6,7 @@ import cors from "cors";
 const app = express();
 app.use(cors());
 
-// Werkende Voordeelmuis supermarkt-URL's
+// Werkende supermarkt-URL's
 const SUPERMARKET_URLS = {
   "Albert Heijn": "https://www.voordeelmuis.nl/aanbiedingen/ah",
   "Jumbo": "https://www.voordeelmuis.nl/aanbiedingen/jumbo",
@@ -18,7 +18,6 @@ const SUPERMARKET_URLS = {
   "Vomar": "https://www.voordeelmuis.nl/aanbiedingen/vomar"
 };
 
-// Scraper voor 1 supermarkt
 async function scrapeSupermarket(store, url) {
   try {
     const { data } = await axios.get(url, {
@@ -28,13 +27,14 @@ async function scrapeSupermarket(store, url) {
     const $ = cheerio.load(data);
     const deals = [];
 
-    $(".product-list-item").each((i, el) => {
-      const item = $(el).find(".product-title").text().trim();
-      const price = $(el).find(".price").text().trim();
+    $("table tr").each((i, el) => {
+      const storeName = $(el).find("td:nth-child(1) img").attr("alt");
+      const item = $(el).find("td:nth-child(2)").text().trim();
+      const price = $(el).find("td:nth-child(3)").text().trim();
 
-      if (item) {
+      if (item && storeName) {
         deals.push({
-          store,
+          store: storeName,
           item,
           price
         });
