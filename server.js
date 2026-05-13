@@ -1,0 +1,60 @@
+import express from "express";
+import axios from "axios";
+import cheerio from "cheerio";
+import cors from "cors";
+
+const app = express();
+app.use(cors());
+
+// Allefolders supermarktsectie
+const URL = "https://www.allefolders.nl/supermarkten";
+
+async function scrapeDeals() {
+  try {
+    const { data } = await axios.get(URL, {
+      headers: {
+        "User-Agent": "Mozilla/5.0"
+      }
+    });
+
+    const $ = cheerio.load(data);
+    const deals = [];
+
+    // SELECTOR: aanbiedingen op allefolders.nl
+    $(".offer-item").each((i, el) => {
+      const store = $(el).find(".offer-shop").text().trim();
+      const item = $(el).find(".offer-title").text().trim();
+      const price = $(el).find(".offer-price").text().trim();
+
+      if (store && item) {
+        deals.push({
+          store,
+          item,
+          price: price || null
+        });
+      }
+    });
+
+    return deals;
+  } catch (err) {
+    console.error("Scraping error:", err.message);
+    return [];
+  }
+}
+
+app.get("/api/deals", async (req, res) => {
+  const deals = await scrapeDeals();
+
+  if (deals.length === 0) {
+    return res.json({
+      error: "Geen deals gevonden (scraping mislukt)",
+      deals: []
+    });
+  }
+
+  res.json(deals);
+});
+
+app.listen(3000, () => {
+  console.log("Scraper draait op http://localhost:3000");
+});
