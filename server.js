@@ -6,8 +6,8 @@ import cors from "cors";
 const app = express();
 app.use(cors());
 
-// Allefolders supermarktsectie
-const URL = "https://www.allefolders.nl/supermarkten";
+// Folderz supermarkt aanbiedingen
+const URL = "https://folderz.nl/supermarkten";
 
 async function scrapeDeals() {
   try {
@@ -20,11 +20,11 @@ async function scrapeDeals() {
     const $ = cheerio.load(data);
     const deals = [];
 
-    // SELECTOR: aanbiedingen op allefolders.nl
-    $(".offer-item").each((i, el) => {
-      const store = $(el).find(".offer-shop").text().trim();
-      const item = $(el).find(".offer-title").text().trim();
-      const price = $(el).find(".offer-price").text().trim();
+    // Elke aanbieding staat in een product-card
+    $(".product-card").each((i, el) => {
+      const store = $(el).find(".product-card__shop").text().trim();
+      const item = $(el).find(".product-card__title").text().trim();
+      const price = $(el).find(".product-card__price").text().trim();
 
       if (store && item) {
         deals.push({
